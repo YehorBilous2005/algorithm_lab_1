@@ -4,13 +4,14 @@
 
 
 void create_file(int file_size){
-    FILE *file = fopen("A.txt", "w");
+    FILE *file = fopen("A.txt", "r");
     int size = fseek(file, 0, SEEK_END);
-    printf("Size of file %d", size);
+    printf("Size of file %ld", size);
+    fclose(file);
 }
 
 int main(){
     srand(time(NULL));
     create_file(1000);
-    return 0;
+    return 1;
 }
