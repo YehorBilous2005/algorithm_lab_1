@@ -13,7 +13,7 @@ void create_file(long long);
 
 int main(){
     srand(time(NULL));
-    create_file(100LL * Bt);
+    create_file(200LL * Bt);
     return 1;
 }
 
