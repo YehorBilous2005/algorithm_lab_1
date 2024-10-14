@@ -19,7 +19,7 @@ int main(){
 
 void create_file(long long required_size){
     long long file_size = 0LL;
-    int digits;
+    short digits;
     int rand_num;
     FILE *file = fopen("D:\\Education\\Algorithms\\lab1\\text_files\\A.txt", "w");
     while (file_size < required_size){
