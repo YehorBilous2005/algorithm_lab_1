@@ -2,29 +2,30 @@
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
+#include <windows.h>
 
-#define Gb 1073741824
+#define Gb 1 << 30
 
-void create_file(int);
+void create_file(long long);
 
 int main(){
     srand(time(NULL));
-    create_file(0.01*Gb);
+    create_file(10LL*Gb);
     return 1;
 }
 
-void create_file(int file_size){
-    int temp_size = 0;
-    int digits = 0;
-    int rand_num = 0;
+void create_file(long long required_size){
+    long long file_size = 0LL;
+    int digits;
+    int rand_num;
     FILE *file = fopen("..\\text_files\\A.txt", "w");
-    while (temp_size < file_size){
+    while (file_size < required_size){
         rand_num = rand() + 1;
         fprintf(file, "%d\n", rand_num);
-        digits = (int)(log10(rand_num)) + 1;
-        temp_size += sizeof(char) * (digits + 2);
+        digits = (int)log10(rand_num) + 1;
+        file_size += (long long)(sizeof(char) * (digits + 2));
     }
     fclose(file);
-    printf("Size of file: %d bytes", temp_size);
+    printf("Size of file: %lld bytes", file_size);
 }
 
