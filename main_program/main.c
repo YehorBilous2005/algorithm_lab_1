@@ -1,68 +1,143 @@
-#include "main.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 
-#define EXTRA_FNUM 5
+#define EXTRAFNUM 5
 
-struct Files{
-    FILE *filesB[EXTRA_FNUM];
-    char **filesB_names[EXTRA_FNUM];
-    FILE *filesC[EXTRA_FNUM];
-    char **filesC_names[EXTRA_FNUM];
+struct NamesStruct{
+    char *fileB[EXTRAFNUM];
+    char *fileC[EXTRAFNUM];
 };
 
-void ExtraFilesCreating(struct Files*, short);
+void DivideFileA(struct NamesStruct *name, short fnum);
 
-void FileADividing(struct Files*, short);
+void CreateExtraFiles(struct NamesStruct *name, short fnum);
+
+void AllocateStructMemory(struct NamesStruct *name, short fnum);
+
+void FreeStructMemory(struct NamesStruct *name, short fnum);
 
 int main(){
-    struct Files files_struct;
-    ExtraFilesCreating(&files_struct, EXTRA_FNUM);
-    for (int i=0; i<EXTRA_FNUM; i++){
-        printf("NameB%d: %s", i, files_struct.filesB_names[i]);
-        printf("NameC%d: %s", i, files_struct.filesC_names[i]);
-    }
-    return 1;
+    struct NamesStruct name;
+    AllocateStructMemory(&name, EXTRAFNUM);
+    CreateExtraFiles(&name, EXTRAFNUM);
+    DivideFileA(&name, EXTRAFNUM);
+    
+    FreeStructMemory(&name, EXTRAFNUM);
+    return 0;
 }
 
-void ExtraFilesCreating(struct Files *files_struct, short fnum){
-    char *file_name = (char*)calloc((int)(log10(fnum) + 2), sizeof(char));
-    for (int i=0; i<fnum; i++){
-        sprintf(file_name, "B%d.txt", i);
-        files_struct->filesB[i] = fopen(file_name, "w+");
-        files_struct->filesB_names[i] = (char**)calloc((int)(log10(fnum) + 2), sizeof(char));
-        files_struct->filesB_names[i] = file_name;
-        printf("File %s was created\n", file_name);
-        fclose(files_struct->filesB[i]);
+void AllocateStructMemory(struct NamesStruct *name, short fnum){
+    // Dynamic memory allocation for digits
+    int *digits = (int *) calloc(1, sizeof(int));
+    if (!digits){
+        printf("Memory allocation failed for digits\n");
+        return 0;
     }
-    for (int i=0; i<fnum; i++){
-        sprintf(file_name, "C%d.txt", i);
-        files_struct->filesC[i] = fopen(file_name, "w+");
-        files_struct->filesB_names[i] = (char**)calloc((int)(log10(fnum) + 2), sizeof(char));
-        files_struct->filesB_names[i] = file_name;
-        printf("\nFile %s was created", file_name);
-        fclose(files_struct->filesC[i]);
+    *digits = (int)log10(EXTRAFNUM) + 2;
+
+    // Dynamic memory allocation for name.files
+    for (int i = 0; i < EXTRAFNUM; i++){
+        name->fileB[i] = (char *) calloc(*digits, sizeof(char));
+        if (!name->fileB[i]){
+            printf("Memory allocation failed for names.fileB[%d]\n", i);
+            return 0;
+        }
+        name->fileC[i] = (char *) calloc(*digits, sizeof(char));
+        if (!name->fileC[i]){
+            printf("Memory allocation failed for names.fileC[%d]\n", i);
+            return 0;
+        }
     }
-    free(file_name);
+
+    // Free dynamically allocated memory for digits
+    free(digits);
+    digits = NULL;
 }
 
-void FileADividing(struct Files *files_struct, short fnum){
-    int *x = (int*)calloc(1, sizeof(int));
-    FILE *file_a = fopen("D:\\Education\\Algorithms\\lab1\\text_files\\A.txt", "r");
+void FreeStructMemory(struct NamesStruct *name, short fnum){
+    // Free dynamically allocated memory for name.files
+    for (int i = 0; i < EXTRAFNUM; i++){
+        free(name->fileB[i]);
+        free(name->fileC[i]);
+        name->fileB[i] = NULL;
+        name->fileC[i] = NULL;
+    }
+}
+
+void CreateExtraFiles(struct NamesStruct *name, short fnum){
     FILE *temp_file;
-    while (!feof(file_a)){
-        for (int i=0; i<fnum; i++){
-            if (!feof(file_a)){
-                fscanf(file_a, "%d", x);
-                printf("%d\n", x);
-                fprintf(files_struct->filesB[i], "%d\n", x);
+
+    for (int i = 0; i < fnum; i++){
+        sprintf(name->fileB[i], "B%d.txt", i);
+        // Temp_file opening
+        temp_file = fopen(name->fileB[i], "w");
+
+        if (temp_file == NULL) {
+            printf("Error creating file %s\n", name->fileB[i]);
+            // Optional free temp_file memory 
+            free(temp_file);
+
+            return;
+        }
+        printf("File %s was created\n", name->fileB[i]);
+        // Temp_file closing
+        fclose(temp_file);
+        temp_file = NULL;
+
+        sprintf(name->fileC[i], "C%d.txt", i);
+        // Temp_file opening
+        temp_file = fopen(name->fileC[i], "w");
+
+        if (temp_file == NULL) {
+            printf("Error creating file %s\n", name->fileC[i]);
+            // Optional free temp_file memory 
+            free(temp_file);
+
+            return;
+        }
+        printf("File %s was created\n", name->fileC[i]);
+        // Temp_file closing
+        fclose(temp_file);
+        temp_file = NULL;
+    }
+}
+
+void DivideFileA(struct NamesStruct *name, short fnum){
+    // File_a opening
+    FILE *file_a = fopen("D:\\Education\\Algorithms\\lab1\\text_files\\A.txt", "r");
+    if (!file_a){
+        printf("Error opening file A.txt\n");
+        return;
+    }
+
+    // Dynamic memory allocation for x
+    int *x = (int *) calloc(1, sizeof(int));
+
+    FILE *temp_file;
+    while (file_a){
+        for (int i = 0; i < fnum; i++){
+            if (fscanf(file_a, "%d", x) != EOF){
+                // Temp_file opening
+                temp_file = fopen(name->fileB[i], "a");
+
+                if (!temp_file){
+                    printf("Error opening file name.fileB[%d]\n", i);
+                    return;
+                }
+                fprintf(temp_file, "%d\n", *x);
+                // Temp_file closing
+                fclose(temp_file);
             }
             else{
                 break;
-            }
+            }  
         }
     }
-    fclose(file_a);
+    // Free dynamically allocated memory for x
     free(x);
+    x = NULL;
+
+    // File_a closing
+    fclose(file_a);
 }
