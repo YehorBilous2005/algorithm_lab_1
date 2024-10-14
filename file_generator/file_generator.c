@@ -5,12 +5,15 @@
 #include <windows.h>
 
 #define Gb 1 << 30
+#define Mb 1 << 20
+#define Kb 1 << 10
+#define Bt 1
 
 void create_file(long long);
 
 int main(){
     srand(time(NULL));
-    create_file(10LL*Gb);
+    create_file(100LL * Bt);
     return 1;
 }
 
@@ -18,7 +21,7 @@ void create_file(long long required_size){
     long long file_size = 0LL;
     int digits;
     int rand_num;
-    FILE *file = fopen("..\\text_files\\A.txt", "w");
+    FILE *file = fopen("D:\\Education\\Algorithms\\lab1\\text_files\\A.txt", "w");
     while (file_size < required_size){
         rand_num = rand() + 1;
         fprintf(file, "%d\n", rand_num);
