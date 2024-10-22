@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-#define EXTRAFNUM 5
+#define EXTRAFNUM 4
 
 struct NamesStruct{
     char *fileB[EXTRAFNUM];
@@ -19,13 +19,15 @@ void freeStructMemory(struct NamesStruct *name, short fnum);
 
 void mergeFilesB(struct NamesStruct *name, short fnum);
 
+void mergeFilesC(struct NamesStruct *name, short fnum);
+
 int main(){
     struct NamesStruct name;
     allocateStructMemory(&name, EXTRAFNUM);
     createExtraBFiles(&name, EXTRAFNUM);
     divideFileA(&name, EXTRAFNUM);
     mergeFilesB(&name, EXTRAFNUM);
-    // mergeFilesC(&name, EXTRAFNUM);
+    mergeFilesC(&name, EXTRAFNUM);
 
     freeStructMemory(&name, EXTRAFNUM);
     printf("\nABOBA_final");
@@ -72,9 +74,15 @@ void allocateStructMemory(struct NamesStruct *name, short fnum){
 }
 
 void freeStructMemory(struct NamesStruct *name, short fnum){
+    // free(name->fileB[3]);
+    // free(name->fileC[1]);
     for (int i = 0; i < EXTRAFNUM; i++){
+        remove(name->fileB[i]);
+        remove(name->fileC[i]);
+
         free(name->fileB[i]); // free memory
         free(name->fileC[i]);
+
         name->fileB[i] = NULL;
         name->fileC[i] = NULL;
     }
@@ -210,10 +218,10 @@ void mergeFilesB(struct NamesStruct *name, short fnum){
         }
 
         quicksort(arr, 0, *endOfFiles - 1);
-        for (int i = 0; i < *endOfFiles; i++){
-            printf("%d ", arr[i]);
-        }
-        printf("\n");
+        // for (int i = 0; i < *endOfFiles; i++){
+        //     printf("%d ", arr[i]);
+        // }
+        // printf("\n");
 
         fileC = fopen(name->fileC[*index], "a+"); // open file
         if (fileC == NULL){
@@ -293,26 +301,64 @@ void mergeFilesB(struct NamesStruct *name, short fnum){
     index = NULL;
 }
 
-// void mergeFilesC(struct NamesStruct *name, short fnum){
-//     FILE *fileC[fnum];
-//     for (int i = 0; i < fnum; i++){
-//         fileC[i] = fopen(name->fileC[i], "r"); // open files c
-//     }
-//     int *arr = (int *) calloc(fnum, sizeof(int));
+int findMinNum(int *arr, int size, int *min_index){
+    long long *min_num = (long long *) calloc(1, sizeof(long long));
+    *min_num = LONG_LONG_MAX;
+    for (int i = 0; i < size; i++){
+        if (*min_num > arr[i] && arr[i] > 0){
+            *min_num = arr[i];
+            *min_index = i;
+        }
+    }
+    free(min_num);
+}
 
-//     for (int i = 0; i < fnum; i++){
-//             if (fileC[i] == NULL) {
-//                 printf("Failed to open file: %s\n", name->fileB[i]);
-//                 free(arr);
-//                 for (int j = 0; j < i; j++){
-//                     fclose(fileC[j]);
-//                 }
-//                 return;
-//             }
-//             if (fscanf(fileB[i], "%d", &arr[i]) != 1){
-//                 printf("Error reading from file: %s\n", name->fileB[i]);
-//                 *endOfFiles = i;
-//                 break;
-//             }
-//         }
-// }
+void mergeFilesC(struct NamesStruct *name, short fnum){
+    FILE *fileC[fnum];
+    FILE *fileB = fopen("D:\\Education\\Algorithms\\lab1\\text_files\\NewBFile.txt", "w");
+
+    for (int i = 0; i < fnum; i++){
+        fileC[i] = fopen(name->fileC[i], "r"); // open files c
+    }
+    int *arr = (int *) calloc(fnum, sizeof(int)); // memory allocation
+
+    int *endOfFiles = (int *) calloc(1, sizeof(int)); // memory allocation
+    *endOfFiles = fnum;
+    int *arr_size = (int *) calloc(1, sizeof(int)); // memory allocation
+    *arr_size = fnum;
+
+    for (int i = 0; i < fnum; i++){
+        if (fscanf(fileC[i], "%d", &arr[i]) != 1){
+            arr[i] = -1;
+            printf("Error reading from file: %s\n", name->fileC[i]);
+            *endOfFiles = i;
+            *arr_size = i;
+            break;
+        }
+    }
+
+    // for (int i = 0; i < *endOfFiles; i++){
+    //     printf("%d ", arr[i]);
+    // }
+    // printf("\n");
+
+    int *min_index = (int *) calloc(1, sizeof(int));
+    while (*arr_size > 0){
+        findMinNum(arr, *endOfFiles, min_index);
+        fprintf(fileB, "%d\n", arr[*min_index]);
+        if (fscanf(fileC[*min_index], "%d", &arr[*min_index]) != 1){
+            arr[*min_index] = -1;
+            printf("Error reading from file: %s\n", name->fileC[*min_index]);
+            (*arr_size)--;
+        }
+    }
+
+    free(min_index);
+    free(arr_size);
+    free(endOfFiles);
+    free(arr);
+    for (int i = 0; i < fnum; i++){
+        fclose(fileC[i]); // close files c
+    }
+    fclose(fileB);
+}
