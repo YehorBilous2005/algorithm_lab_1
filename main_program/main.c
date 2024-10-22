@@ -17,14 +17,15 @@ void allocateStructMemory(struct NamesStruct *name, short fnum);
 
 void freeStructMemory(struct NamesStruct *name, short fnum);
 
-void mergeFilesBUnoptimized(struct NamesStruct *name, short fnum);
+void mergeFilesB(struct NamesStruct *name, short fnum);
 
 int main(){
     struct NamesStruct name;
     allocateStructMemory(&name, EXTRAFNUM);
     createExtraBFiles(&name, EXTRAFNUM);
     divideFileA(&name, EXTRAFNUM);
-    mergeFilesBUnoptimized(&name, EXTRAFNUM);
+    mergeFilesB(&name, EXTRAFNUM);
+    // mergeFilesC(&name, EXTRAFNUM);
 
     freeStructMemory(&name, EXTRAFNUM);
     printf("\nABOBA_final");
@@ -171,7 +172,7 @@ void quicksort(int arr[], int low, int high){
     }
 }
 
-void mergeFilesBUnoptimized(struct NamesStruct *name, short fnum){
+void mergeFilesB(struct NamesStruct *name, short fnum){
     FILE *fileB[fnum];
     FILE *fileC = NULL;
 
@@ -188,36 +189,28 @@ void mergeFilesBUnoptimized(struct NamesStruct *name, short fnum){
     int *index = (int *) calloc(1, sizeof(int)); // memory allocation
     *index = 0; 
 
+    int *endOfFiles = (int *) calloc(1, sizeof(int)); // memory allocation
+    *endOfFiles = fnum;
     while (!feof(fileB[0])){
         for (int i = 0; i < fnum; i++){
             if (fileB[i] == NULL) {
                 printf("Failed to open file: %s\n", name->fileB[i]);
                 free(index);
                 free(arr);
-                for (int i = 0; i < fnum; i++){
-                    fclose(fileB[i]);
-                    fileB[i] = NULL;
+                for (int j = 0; j < i; j++){
+                    fclose(fileB[j]);
                 }
                 return;
             }
             if (fscanf(fileB[i], "%d", &arr[i]) != 1){
                 printf("Error reading from file: %s\n", name->fileB[i]);
-                fileC = fopen(name->fileC[*index], "a+");
-                for (int j = 0; j < i; j++){
-                    fprintf(fileC, "%d\n", arr[j]);
-                }
-                fclose(fileC);
-                free(index);
-                free(arr);
-                for (int i = 0; i < fnum; i++){
-                    fclose(fileB[i]);
-                }
-                return;
+                *endOfFiles = i;
+                break;
             }
         }
 
-        quicksort(arr, 0, fnum - 1);
-        for (int i = 0; i < fnum; i++){
+        quicksort(arr, 0, *endOfFiles - 1);
+        for (int i = 0; i < *endOfFiles; i++){
             printf("%d ", arr[i]);
         }
         printf("\n");
@@ -229,7 +222,6 @@ void mergeFilesBUnoptimized(struct NamesStruct *name, short fnum){
             free(arr);
             for (int i = 0; i < fnum; i++){
                 fclose(fileB[i]);
-                fileB[i] = NULL;
             }
             return;
         }
@@ -240,12 +232,12 @@ void mergeFilesBUnoptimized(struct NamesStruct *name, short fnum){
         fseek(fileC, 0, SEEK_SET);
         fscanf(fileC, "%d", temp_num);
         if (feof(fileC)){
-            for (int i = 0; i < fnum; i++){
+            for (int i = 0; i < *endOfFiles; i++){
                 fprintf(fileC, "%d\n", arr[i]);
             }
         }
         else{
-            for (int i = 0; i < fnum; i++){
+            for (int i = 0; i < *endOfFiles; i++){
                 while (!feof(fileC)){
                     if (*temp_num <= arr[i]){
                         fprintf(temp_file, "%d\n", *temp_num);
@@ -260,8 +252,10 @@ void mergeFilesBUnoptimized(struct NamesStruct *name, short fnum){
                     fprintf(temp_file, "%d\n", arr[i]);
                 }
             }    
-            while (fscanf(fileC, "%d", temp_num) == 1){
+
+            while (!feof(fileC)){
                 fprintf(temp_file, "%d\n", *temp_num);
+                fscanf(fileC, "%d", temp_num);
             }
             fclose(fileC);
             fclose(temp_file);
@@ -275,12 +269,16 @@ void mergeFilesBUnoptimized(struct NamesStruct *name, short fnum){
         free(temp_num); // free memory
         temp_num = NULL;
         fclose(temp_file); // close file
-    
+        remove("tempFile");
         fclose(fileC); // close file
 
         (*index)++;
         if (*index >= fnum){
             *index = 0;
+        }
+
+        if (*endOfFiles != fnum){
+            break;
         }
     }
 
@@ -288,8 +286,33 @@ void mergeFilesBUnoptimized(struct NamesStruct *name, short fnum){
         fclose(fileB[i]);
     }
 
+    free(endOfFiles);
     free(arr); // free memory
     arr = NULL;
     free(index);
     index = NULL;
 }
+
+// void mergeFilesC(struct NamesStruct *name, short fnum){
+//     FILE *fileC[fnum];
+//     for (int i = 0; i < fnum; i++){
+//         fileC[i] = fopen(name->fileC[i], "r"); // open files c
+//     }
+//     int *arr = (int *) calloc(fnum, sizeof(int));
+
+//     for (int i = 0; i < fnum; i++){
+//             if (fileC[i] == NULL) {
+//                 printf("Failed to open file: %s\n", name->fileB[i]);
+//                 free(arr);
+//                 for (int j = 0; j < i; j++){
+//                     fclose(fileC[j]);
+//                 }
+//                 return;
+//             }
+//             if (fscanf(fileB[i], "%d", &arr[i]) != 1){
+//                 printf("Error reading from file: %s\n", name->fileB[i]);
+//                 *endOfFiles = i;
+//                 break;
+//             }
+//         }
+// }
