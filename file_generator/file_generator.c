@@ -4,16 +4,16 @@
 #include <math.h>
 #include <windows.h>
 
-#define Gb 1 << 30
-#define Mb 1 << 20
-#define Kb 1 << 10
-#define Bt 1
+#define GB 1 << 30
+#define MB 1 << 20
+#define KB 1 << 10
+#define B 1
 
 void create_file(long long);
 
 int main(){
     srand(time(NULL));
-    create_file(100LL * Mb);
+    create_file(1 * KB);
     return 1;
 }
 

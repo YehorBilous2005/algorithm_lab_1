@@ -301,7 +301,7 @@ void mergeFilesB(struct NamesStruct *name, short fnum){
     index = NULL;
 }
 
-int findMinNum(int *arr, int size, int *min_index){
+void findMinNum(int *arr, int size, int *min_index){
     long long *min_num = (long long *) calloc(1, sizeof(long long));
     *min_num = LONG_LONG_MAX;
     for (int i = 0; i < size; i++){
