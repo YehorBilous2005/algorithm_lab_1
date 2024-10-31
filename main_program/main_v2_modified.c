@@ -7,7 +7,13 @@
 #define PATH_TO_A "D:\\Education\\Algorithms\\lab1\\text_files\\A.txt"
 #define PATH_TO_FOLDER "D:\\Education\\Algorithms\\lab1\\text_files\\"
 
+#define GB 1 << 30
+#define MB 1 << 20
+#define KB 1 << 10
+#define B 1
+
 #define EXTRAFNUM 100
+#define EXTRARAM 10*MB
 
 struct Names{
     char* b[EXTRAFNUM];
@@ -21,17 +27,20 @@ void freeNamesStruct(int fnum);
 void createExtraFiles(int fnum);
 FILE** openFiles(int fnum, char mode[], char* file_names[]);
 void closeFiles(int fnum, FILE** files);
-void divideFileA(int fnum, char* file_names[]);
+void swap(int* a, int* b);
+int partition(int arr[], int low, int high);
+void quickSort(int arr[], int low, int high);
+void divideFile(char file_from[], int fnum, char* file_names[], int series);
 int mergeSeries(int fnum, FILE** ffiles, FILE* tfile, int series);
 void mergeFiles(int fnum, char* ffile_names[], char* tfile_names[], int* series);
-void externalSorting(int fnum);
+void externalSorting(int fnum, int ram);
 
 int main(){
     initNamesStruct(EXTRAFNUM);
 
     clock_t start, end;
     start = clock();
-    externalSorting(EXTRAFNUM);  
+    externalSorting(EXTRAFNUM, EXTRARAM);  
     end = clock();
     printf("Time used: %f\n", (double)(end - start) / CLOCKS_PER_SEC);
 
@@ -102,20 +111,56 @@ void closeFiles(int fnum, FILE** files) {
     free(files);
 }
 
-void divideFileA(int fnum, char* file_names[]){
-    FILE* file_a = fopen(PATH_TO_A, "r");
-    int temp_num;
+void swap(int* a, int* b){
+    int temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+int partition(int* arr, int low, int high){
+    int pivot = arr[high];
+    int i = (low - 1);
+    for (int j = low; j <= high - 1; j++){
+        if (arr[j] < pivot){
+            i++;
+            swap(&arr[i], &arr[j]);
+        }
+    }
+    swap(&arr[i + 1], &arr[high]);
+    return (i + 1);
+}
+
+void quickSort(int* arr, int low, int high){
+    if (low < high){
+        int pi = partition(arr, low, high);
+        quickSort(arr, low, pi - 1);
+        quickSort(arr, pi + 1, high);
+    }
+}
+
+void divideFile(char file_from[], int fnum, char* file_names[], int series){
+    FILE* file_a = fopen(file_from, "r");
+
+    int* arr = (int*) calloc(series, sizeof(int));
+    int index = 0; 
     FILE** temp_files = openFiles(fnum, "a", file_names);
     while (!feof(file_a)){
-        for (int i = 0; i < fnum; i++){
-            global_a_size++;
-            if (fscanf(file_a, "%d", &temp_num) != EOF){
-                fprintf(temp_files[i], "%d\n", temp_num);
+        for (int i = 0; i < series; i++){
+            if (fscanf(file_a, "%d", &arr[i]) != EOF){
+                global_a_size++;
             }else{
+                series = i;
                 break;
             }
         }
+        quickSort(arr, 0, series-1);
+        for (int i = 0; i < series; i++){
+            fprintf(temp_files[index], "%d\n", arr[i]);
+        }
+        index++;
+        index = (index >= fnum)? 0 : index;
     }
+    free(arr);  
     fclose(file_a);
     closeFiles(fnum, temp_files);
 }
@@ -190,10 +235,12 @@ void mergeFiles(int fnum, char* ffile_names[], char* tfile_names[], int* series)
     *series *= fnum;
 }
 
-void externalSorting(int fnum){
+void externalSorting(int fnum, int ram){
     createExtraFiles(fnum);
-    divideFileA(fnum, name.b);
-    int series = 1;
+    int series = (int)(ram / 3 + 1);
+    printf("series=%d\n", series);
+    divideFile(PATH_TO_A, fnum, name.b, series);
+    
     int sequence = 0;
     while (series < global_a_size){
         if (sequence == 0){
