@@ -13,7 +13,7 @@
 #define B 1
 
 #define EXTRAFNUM 100
-#define EXTRARAM 10*MB
+#define EXTRARAM 1*MB
 
 struct Names{
     char* b[EXTRAFNUM];
